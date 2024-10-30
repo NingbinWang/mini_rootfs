@@ -1,0 +1,7 @@
+#!/bin/sh
+## This is a rcS file for hostname.
+
+# set hostname of our device
+[ -e /bin/hostname ] && /bin/hostname halos
+
+

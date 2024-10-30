@@ -1,0 +1,30 @@
+#! /bin/sh
+# This is a minmal rcK file for target shutdown
+#
+## Modify by liweijie for AUTOELEC platform @2021-9-1
+
+
+for stopscript in /etc/rcK.d/K[0-9][0-9]*
+do
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$stopscript" ] && continue
+
+	 # echo "$stopscript start $(date)";
+     case "$stopscript" in
+	*.sh)
+	    # Source shell script for speed.
+	    (
+		trap - INT QUIT TSTP
+		set stop
+		. $stopscript
+	    )
+	    ;;
+	*)
+	    # No sh extension, so fork subprocess.
+	    $stopscript stop
+	    ;;
+    esac
+done
+
+
+exit 0

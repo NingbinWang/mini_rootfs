@@ -1,0 +1,15 @@
+#!/bin/sh
+## This is a rcS file for dev nodes making.
+
+# Make device nodes if they doesn't exist,
+# these nodes can't be created by udev.
+[ -e /dev/console ] && /bin/rm -rf /dev/console
+[ -e /dev/console ] || /bin/mknod -m 622 /dev/console c 5 1
+[ -e /dev/null ] && /bin/rm -rf /dev/null
+[ -e /dev/null ] || /bin/mknod -m 666 /dev/null c 1 3
+[ -e /dev/watchdog ] || /bin/mknod -m 660 /dev/watchdog c 10 130
+[ -e /dev/msmouse ] || /bin/mknod -m 660 /dev/msmouse c 10 2
+#[ -e /dev/ppp ] || /bin/mknod -m 660 /dev/ppp c 16 13
+[ -e /dev/input ] || /bin/mkdir /dev/input
+
+

@@ -1,0 +1,10 @@
+#!/bin/sh
+## This is a rcS file for hostname.
+## Modify by liweijie for AUTOELEC platform@2015-3-19
+
+
+# Application start below.
+# Show current date.
+/bin/date
+
+

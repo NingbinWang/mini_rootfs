@@ -1,0 +1,28 @@
+#!/bin/sh
+## This is a rcS file for mkdir dirs.
+## Modify by liweijie for AUTOELEC platform@2015-3-19
+
+
+# Make /mnt/sd[a-h][1-4] directories if they doesn't exist.
+# 
+# Support 8 disks and each 4 partitions
+disk_id="a b c d e f g h i"
+partition_id="1 2 3 4"
+# First, make /mnt directory if it doesn't exist.
+[ -e /mnt ] || /bin/mkdir -p /mnt
+# Main loop for making dirs.
+
+for i in $disk_id
+do
+	for j in $partition_id
+	do
+		# Making /mnt/sd* dirs...
+		[ -e /mnt/sd"$i""$j" ] || /bin/mkdir -p /mnt/sd"$i""$j"
+		# Making /mnt/esd* dirs...
+		#if [ "x$i" = "xa" -o "x$i" = "xb" ];then
+		#	[ -e /mnt/esd"$i""$j" ] || /bin/mkdir -p /mnt/esd"$i""$j"
+		#fi
+	done
+done
+
+

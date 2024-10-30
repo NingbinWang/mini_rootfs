@@ -1,0 +1,5 @@
+#!/bin/sh
+## This is a rcS file for network config.
+
+echo 1 > /proc/sys/net/ipv4/conf/all/accept_local
+

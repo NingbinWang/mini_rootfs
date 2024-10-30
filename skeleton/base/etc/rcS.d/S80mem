@@ -1,0 +1,9 @@
+#!/bin/sh
+## This is a rcS file for memery config.
+
+
+#Hi3535 platform TOE engine Support
+[ -e /proc/sys/vm/min_free_kbytes ] && echo 8192 > /proc/sys/vm/min_free_kbytes
+[ -e /proc/sys/vm/vfs_cache_pressure ] && echo 200 > /proc/sys/vm/vfs_cache_pressure
+
+

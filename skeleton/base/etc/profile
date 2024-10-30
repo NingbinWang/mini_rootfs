@@ -1,0 +1,20 @@
+# /etc/profile: system-wide .profile file for the Bourne shell (sh(1))
+# and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
+
+export PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib
+alias ll="ls -l --color=auto"
+alias l.="ls -d .* --color=auto"
+
+# Set prompt color
+if [ "$TERM" = "linux" ];then
+ 	# We're on the system console or maybe telnetting in
+	export PS1="\[\e[35;1m\][\u@\[\e[32;1m\]\h \W] \\$ \[\e[0m\]"
+else
+	# we're not on the console, assume an xterm
+	export PS1="\[\e[32m\][\u\[\e[0m\]@\[\e[31m\]\h\[\e[0m\] \[\e[32m\]\W] \[\e[35m\]\\$ \[\e[0m\]"
+fi
+
+umask 022
+
+#su guest

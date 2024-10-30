@@ -1,0 +1,5 @@
+#!/bin/sh
+
+KDBG_LEVEL=$(/usr/bin/awk '{print $1}' /proc/sys/kernel/printk);
+[ -e /dev/kmsg ] || /bin/mknod -m 600 /dev/kmsg c 1 11
+

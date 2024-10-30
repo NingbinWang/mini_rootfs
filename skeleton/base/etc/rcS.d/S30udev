@@ -1,0 +1,59 @@
+#!/bin/sh
+## This is a rcS file for udev startup, dev nodes making, and other init.
+
+# If /sbin/udevstart and /sbin/udev both exist,
+# using udev and our rules to create device nodes.
+if [ -e /sbin/udevadm -a -e /sbin/udevd ] ; then
+	
+	# Mount tmpfs on /dev, so device nodes created
+	# by udev should exist in ram.(tmpfs based on ram)
+	is_mounted=$(awk '/^udev/{print 1}' /proc/mounts)
+	[ "x${is_mounted}" != "x" ] || /bin/mount -t tmpfs udev /dev >/dev/null 2>&1
+	# Error check.
+	if [ $? -ne 0 ]; then
+		echo "Mounting udev failed"
+	fi
+
+	# If directory doesn't exist, we create it.
+	[ -e /dev/pts ] || /bin/mkdir -p /dev/pts
+	[ -e /dev/.udev ] || /bin/mkdir -p /dev/.udev
+	[ -e /dev/input ] || /bin/mkdir -p /dev/input
+	[ -e /dev/usb ] || /bin/mkdir -p /dev/usb
+	[ -e /dev/snd ] || /bin/mkdir -p /dev/snd
+
+	#add device nodes if they doesn't exist
+	[ -e /dev/kmsg ] || /bin/mknod -m 644 /dev/kmsg c 1 11
+
+	# Mount devpts on /dev/pts, used for
+	# pseudo terminal, such as telnet.
+	/bin/mount -t devpts devpts /dev/pts >/dev/null 2>&1
+	# Error check
+	if [ $? -ne 0 ]; then
+		echo "Mounting devpts failed"
+	fi
+
+	# The core of udev startup.
+	#echo -n "Starting udev:      "
+	# Runing udevd daemon, the return of this command
+	# saved in variable $ret.
+	/sbin/udevd --daemon >/dev/null 2>&1; ret=$?
+	# Running udevadm, the return saved in $?.
+	/sbin/udevadm trigger >/dev/null 2>&1
+	# If udevadm and udevd both return 0,
+	# udev starts ok, otherwise failed.
+	if [ $? -eq 0 -a $ret -eq 0 ]; then
+   		echo "Starting udev:      [ OK ]"
+	else
+   		echo "Starting udev:      [ FAILED ]"
+	fi
+	#sleep 1;
+
+# If /sbin/udevadm or /sbin/udev doesn't exist,
+# using default device nodes created by wrlinux workbench.
+else
+	 echo "No udev support, use default devfs"
+fi
+
+
+
+
