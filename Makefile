@@ -3,8 +3,6 @@ SHELL = /bin/bash
 PYTHON := python
 PWD = $(shell pwd)
 
-
-
 SKELETON_PATH = $(PWD)/skeleton
 OUTPUT_PATH = $(PWD)/output
 BUILD_DIR = $(OUTPUT_PATH)/build
@@ -12,17 +10,18 @@ SKELETON_TOOLS = $(SKELETON_PATH)/tools
 STAGING_OUTPUTDIR = $(BUILD_DIR)/stagine
 PACKAGES_BUILDDIR = $(BUILD_DIR)/packages
 PACKAGES_DIR=$(SKELETON_PATH)/packages
-export  STAGING_OUTPUTDIR
 
 ROOTFS_ARCH = arm64
 ifeq ($(ROOTFS_ARCH),arm64)
 ROOTFS_CROSS_COMPILE_DIR =  $(PWD)/../prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu
 ROOTFS_CROSS_COMPILE = $(ROOTFS_CROSS_COMPILE_DIR)/bin/aarch64-linux-gnu
 CROSS_COMPILE_LIBCDIR=$(ROOTFS_CROSS_COMPILE_DIR)/aarch64-linux-gnu/libc
+CROSS_COMPILE_HOST=aarch64-linux-gnu
 else
 ROOTFS_CROSS_COMPILE_DIR =  $(PWD)/../prebuilts/gcc/linux-x86/arm/gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueabihf
 ROOTFS_CROSS_COMPILE = $(ROOTFS_CROSS_COMPILE_DIR)/bin/arm-linux-gnueabihf
 CROSS_COMPILE_LIBCDIR=$(ROOTFS_CROSS_COMPILE_DIR)/arm-linux-gnueabihf/libc
+CROSS_COMPILE_HOST=arm-linux-gnueabihf
 endif
 BUSYBOX_DIR = $(SKELETON_PATH)/busybox
 #fix
@@ -32,16 +31,11 @@ IMGNAME_EXT4=rootfs.ext4.bin
 ROOTFS_EXT4_SIZE=1892MB
 
 
-
-
-
-
-
 BUSYBOX_VERSION = 1.34.1
 BUSYBOX_ARCH = $(ROOTFS_ARCH)
 BUSYBOX_CROSS_COMPILE = $(ROOTFS_CROSS_COMPILE)-
 
-export ROOTFS_CROSS_COMPILE ROOTFS_ARCH
+export ROOTFS_CROSS_COMPILE ROOTFS_ARCH STAGING_OUTPUTDIR CROSS_COMPILE_HOST
 
 
 BUSYBOX_SOURCE = busybox-$(BUSYBOX_VERSION).tar.bz2
@@ -66,6 +60,7 @@ checkenv:
 
 stagine:checkenv
 	cp -rf $(SKELETON_PATH)/base/*  $(STAGING_OUTPUTDIR) 
+	find $(STAGING_OUTPUTDIR) -name ".gitkeep" |xargs -i rm {}
 	cp -a  $(CROSS_COMPILE_LIBCDIR)/lib/*.so* $(STAGING_OUTPUTDIR)/lib
 	cp -a  $(CROSS_COMPILE_LIBCDIR)/usr/lib/*.so* $(STAGING_OUTPUTDIR)/usr/lib
 
