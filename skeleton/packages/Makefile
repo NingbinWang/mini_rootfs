@@ -12,16 +12,17 @@ V4L_VER=1.22.1
 WPA_VER=2.9
 LIBNL_VER=3.2.25
 OPENSSL_VER=3.4.0
-
+DHCPD_VER=10.1.0
 
 BUILD_ALL = i2c_tools
 #BUILD_ALL += iozone3
-#BUILD_ALL += wpa_supplicant
+BUILD_ALL += wpa_supplicant
 BUILD_ALL += v4l2-utils
 
 BUILD_INSTALL = i2c_tools_install
 #BUILD_INSTALL += iozone3_install
 BUILD_INSTALL += v4l2-utils_install
+BUILD_INSTALL += wpa_supplicant_install
 
 i2c_tools:
 	@echo "CC=$(CC)"
@@ -45,7 +46,7 @@ wifienv:
 openssl:wifienv
 	if [ ! -e $(PWD)/wifi/openssl_install_$(OPENSSL_VER) ]; then \
 		tar -zxvf $(PWD)/openssl-$(OPENSSL_VER).tar.gz; \
-		cd $(PWD)/openssl-$(OPENSSL_VER)/&&./configure no-asm shared no-async --prefix=$(PWD)/wifi/openssl_install_$(OPENSSL_VER); \
+		cd $(PWD)/openssl-$(OPENSSL_VER)/&&./config no-asm shared no-async --prefix=$(PWD)/wifi/openssl_install_$(OPENSSL_VER); \
 		sed -i "s/PLATFORM=linux-x86_64/PLATFORM=arm/" $(PWD)/openssl-$(OPENSSL_VER)/Makefile; \
 		sed -i "s/CNF_CFLAGS=-pthread -m64/CNF_CFLAGS=-pthread/" $(PWD)/openssl-$(OPENSSL_VER)/Makefile; \
 		sed -i "s/CNF_CXXFLAGS=-std=c++11 -pthread -m64/CNF_CXXFLAGS=-std=c++11 -pthread/" $(PWD)/openssl-$(OPENSSL_VER)/Makefile; \
@@ -75,7 +76,7 @@ wpa_supplicant:openssl libnl
 	echo "CC=$(CC)" >> $(PWD)/wpa_supplicant-$(WPA_VER)/wpa_supplicant/.config
 	make -C $(PWD)/wpa_supplicant-$(WPA_VER)/wpa_supplicant/
 
-     
+# v4l2-utils website :https://linuxtv.org/downloads/v4l-utils/ 
 v4l2-utils:
 	tar -jxvf $(PWD)/v4l-utils-$(V4L_VER).tar.bz2
 	cd $(PWD)/v4l-utils-$(V4L_VER)&&./configure --disable-doxygen-doc --with-pic --with-udevdir --host=$(CROSS_COMPILE_HOST) --prefix=$(PWD)/v4l2_install 
@@ -83,11 +84,8 @@ v4l2-utils:
 	make -C $(PWD)/v4l-utils-$(V4L_VER) install;
 
 
-
 all:$(BUILD_ALL)
 	@echo "Finish build packages"
-
-
 
 i2c_tools_install:
 	$(INSTALL) $(PWD)/i2c-tools-$(I2CTOOS_VER)/lib/*.so* $(STAGING_OUTPUTDIR)/lib/
@@ -100,9 +98,20 @@ i2c_tools_install:
 iozone3_install:
 	$(INSTALL) $(PWD)/iozone3_$(IOZONE3_VER)/src/current/iozone $(STAGING_OUTPUTDIR)/bin
 
+wpa_supplicant_install:
+	$(INSTALL) $(PWD)/wifi/openssl_install_$(OPENSSL_VER)/lib64/*.so* $(STAGING_OUTPUTDIR)/usr/lib
+	$(INSTALL) $(PWD)/wifi/libnl_install_$(LIBNL_VER)/lib/*.so* $(STAGING_OUTPUTDIR)/usr/lib
+	$(INSTALL) $(PWD)/wpa_supplicant-$(WPA_VER)/wpa_supplicant/wpa_cli $(STAGING_OUTPUTDIR)/bin
+	$(INSTALL) $(PWD)/wpa_supplicant-$(WPA_VER)/wpa_supplicant/wpa_passphrase $(STAGING_OUTPUTDIR)/bin
+	$(INSTALL) $(PWD)/wpa_supplicant-$(WPA_VER)/wpa_supplicant/wpa_supplicant $(STAGING_OUTPUTDIR)/bin
+	$(INSTALL) $(PWD)/wpa_supplicant.conf $(STAGING_OUTPUTDIR)/etc
+
 v4l2-utils_install:
 	$(INSTALL) $(PWD)/v4l2_install/lib/*.so* $(STAGING_OUTPUTDIR)/lib/
 	$(INSTALL) $(PWD)/v4l2_install/bin/v4l2-ctl $(STAGING_OUTPUTDIR)/bin/
+	$(INSTALL) $(PWD)/v4l2_install/bin/media-ctl $(STAGING_OUTPUTDIR)/bin/
+	$(INSTALL) $(PWD)/v4l2_install/bin/v4l2-compliance $(STAGING_OUTPUTDIR)/bin/
+	$(INSTALL) $(PWD)/v4l2_install/bin/v4l2-sysfs-path $(STAGING_OUTPUTDIR)/bin/
 
 
 install:$(BUILD_INSTALL)

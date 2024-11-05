@@ -1,6 +1,5 @@
 #!/bin/sh
 ## This is a rcS file for mkdir dirs.
-## Modify by liweijie for AUTOELEC platform@2015-3-19
 
 
 # Make /mnt/sd[a-h][1-4] directories if they doesn't exist.

@@ -1,6 +1,5 @@
 #!/bin/sh
 ## This is a rcS file for mdev startup, dev nodes making, and other init.
-## Modify by liweijie for HATBSP(V3.0) @2017-5-27
 
 /bin/rm -rf /dev/*
 /bin/echo /sbin/mdev > /proc/sys/kernel/hotplug

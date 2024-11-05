@@ -10,6 +10,7 @@ SKELETON_TOOLS = $(SKELETON_PATH)/tools
 STAGING_OUTPUTDIR = $(BUILD_DIR)/stagine
 PACKAGES_BUILDDIR = $(BUILD_DIR)/packages
 PACKAGES_DIR=$(SKELETON_PATH)/packages
+FIRMWARE_DIR=$(SKELETON_PATH)/firmware
 
 ROOTFS_ARCH = arm64
 ifeq ($(ROOTFS_ARCH),arm64)
@@ -63,6 +64,8 @@ stagine:checkenv
 	find $(STAGING_OUTPUTDIR) -name ".gitkeep" |xargs -i rm {}
 	cp -a  $(CROSS_COMPILE_LIBCDIR)/lib/*.so* $(STAGING_OUTPUTDIR)/lib
 	cp -a  $(CROSS_COMPILE_LIBCDIR)/usr/lib/*.so* $(STAGING_OUTPUTDIR)/usr/lib
+	mkdir -p $(STAGING_OUTPUTDIR)/lib/firmware
+	cp -rf $(FIRMWARE_DIR)/wifi/*  $(STAGING_OUTPUTDIR)/lib/firmware/
 
 
 
