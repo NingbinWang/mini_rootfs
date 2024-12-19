@@ -16,13 +16,13 @@ DHCPD_VER=10.1.0
 
 BUILD_ALL = i2c_tools
 #BUILD_ALL += iozone3
-BUILD_ALL += wpa_supplicant
+#BUILD_ALL += wpa_supplicant
 BUILD_ALL += v4l2-utils
 
 BUILD_INSTALL = i2c_tools_install
 #BUILD_INSTALL += iozone3_install
 BUILD_INSTALL += v4l2-utils_install
-BUILD_INSTALL += wpa_supplicant_install
+#BUILD_INSTALL += wpa_supplicant_install
 
 i2c_tools:
 	@echo "CC=$(CC)"
@@ -79,9 +79,15 @@ wpa_supplicant:openssl libnl
 # v4l2-utils website :https://linuxtv.org/downloads/v4l-utils/ 
 v4l2-utils:
 	tar -jxvf $(PWD)/v4l-utils-$(V4L_VER).tar.bz2
-	cd $(PWD)/v4l-utils-$(V4L_VER)&&./configure --disable-doxygen-doc --with-pic --with-udevdir --host=$(CROSS_COMPILE_HOST) --prefix=$(PWD)/v4l2_install 
+	cd $(PWD)/v4l-utils-$(V4L_VER)&&./configure  --disable-doxygen-doc --disable-qvidcap --with-udevdir=/usr/lib/udev --host=$(CROSS_COMPILE_HOST) --prefix=$(PWD)/v4l2_install 
 	make -C $(PWD)/v4l-utils-$(V4L_VER)
 	make -C $(PWD)/v4l-utils-$(V4L_VER) install;
+#https://gstreamer.freedesktop.org/src/gstreamer/
+
+#https://zlib.net/
+
+#https://github.com/libffi/libffi/releases/
+
 
 
 all:$(BUILD_ALL)

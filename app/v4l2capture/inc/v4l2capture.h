@@ -66,10 +66,10 @@ struct v4l2_requestbuffers
 
 
 ***************************************/
-#define FRAME_NUM  4//缓冲区内缓冲帧的数目
-#define FRAME_WIDTH 720
-#define FRAME_HEIGHT 480
-#define FRAME_FORMAT V4L2_PIX_FMT_YUYV
+#define FRAME_NUM  8//缓冲区内缓冲帧的数目
+#define FRAME_WIDTH 1920
+#define FRAME_HEIGHT 1080
+#define FRAME_FORMAT V4L2_PIX_FMT_NV12
 
 struct VideoDevice {
    int iFd;

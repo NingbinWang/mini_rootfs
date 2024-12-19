@@ -42,8 +42,9 @@ int init_v4l2capture(const char* dev)
     printf("device : %s\n",cap.card);
     printf("bus : %s\n",cap.bus_info);
     printf("version : %d\n",cap.version);
+    printf("capabilities: %x\n",cap.capabilities);
 
-    if(!(cap.capabilities & V4L2_BUF_TYPE_VIDEO_CAPTURE)) //判断是否为视频捕获设备
+    if(!(cap.capabilities & V4L2_CAP_DEVICE_CAPS)) //判断是否为视频捕获设备
     { 
         printf("%s is not a video capture device\n",dev);
         return -1;
@@ -53,36 +54,33 @@ int init_v4l2capture(const char* dev)
          printf("%s support streaming i/o\n",dev);
     }
 
-    if(cap.capabilities & V4L2_CAP_READWRITE)
+    if(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE)
     {
-         printf("%s support read i/o\n",dev);
+         printf("%s support CAPTURE_MPLANE\n",dev);
     }
- 
-    //struct v4l2_fmtdesc fmtdesc;
-    memset(&fmtdesc, 0, sizeof(struct v4l2_fmtdesc));
-    fmtdesc.index=0;
-    fmtdesc.type=V4L2_BUF_TYPE_VIDEO_CAPTURE;// camera type要设置为V4L2_BUF_TYPE_VIDEO_CAPTURE
-    while(ioctl(capture.iFd, VIDIOC_ENUM_FMT, &fmtdesc) != -1)
-    {
-        printf("\t%d.%s\n",fmtdesc.index+1,fmtdesc.description);
-        fmtdesc.index++;
+       /*设置格式*/
+      memset(&fmt, 0, sizeof(struct v4l2_format));
+    if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) {
+        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fmt.fmt.pix.width = 1920;
+        fmt.fmt.pix.height = 1080;
+        fmt.fmt.pix.pixelformat = FRAME_FORMAT;
+        fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+        fmt.fmt.pix.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+    } else if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
+        fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+        fmt.fmt.pix_mp.width = 1920;
+        fmt.fmt.pix_mp.height = 1080;
+        fmt.fmt.pix_mp.pixelformat = FRAME_FORMAT;
+        fmt.fmt.pix_mp.quantization = V4L2_QUANTIZATION_FULL_RANGE;
     }
- 
-    /*设置格式*/
-   // struct v4l2_format fmt;
-    memset(&fmt, 0, sizeof(struct v4l2_format));
-    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;//摄像头缓冲
-    fmt.fmt.pix.width = FRAME_WIDTH;
-    fmt.fmt.pix.height = FRAME_HEIGHT;
-   // fmt.fmt.pix.pixelformat = fmtdesc.pixelformat;
-   fmt.fmt.pix.pixelformat = FRAME_FORMAT;
     if (ioctl(capture.iFd, VIDIOC_S_FMT, &fmt) < 0)
     {
         printf("set foramt:%d failed\n",FRAME_FORMAT);
         return -1;
     }
-    capture.iWidth = FRAME_WIDTH;
-    capture.iHeight = FRAME_HEIGHT;
+    capture.iWidth = 1920;
+    capture.iHeight = 1080;
     capture.iPixelFormat = FRAME_FORMAT;
     return 0;
 }
@@ -97,11 +95,11 @@ int v4l2capture_mmap_buffer()
    
     //struct v4l2_requestbuffers req;
     req.count =FRAME_NUM;                    //帧缓冲数量
-    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; //视频捕获缓冲区类型
+    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE; //视频捕获缓冲区类型
     req.memory = V4L2_MEMORY_MMAP;          //内存映射方式
     if (ioctl(capture.iFd, VIDIOC_REQBUFS, &req) < 0) {
         printf("VIDIOC_REQBUFS fail\n");
-        return -1;
+
     }
 
  
@@ -110,10 +108,14 @@ int v4l2capture_mmap_buffer()
     {
         /*查询内核缓冲区信息*/
         struct v4l2_buffer v4l2_buf;
+         struct v4l2_plane planes[1];
+
         memset(&v4l2_buf, 0, sizeof(v4l2_buf));
-        v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
         v4l2_buf.memory = V4L2_MEMORY_MMAP;
         v4l2_buf.index = i;
+        v4l2_buf.m.planes = planes;
+        v4l2_buf.length = 1;
         if(ioctl(capture.iFd , VIDIOC_QUERYBUF, &v4l2_buf) < 0){
             printf("VIDIOC_QUERYBUF failed\n");
             return -1;
@@ -125,16 +127,21 @@ int v4l2capture_mmap_buffer()
          * 进而能够知道应该在第几个用户缓冲区中取数据
          */
         capture.iVideoBuf[i] = NULL;
-        capture.iVideoBufLen[i] = v4l2_buf.length;
-        capture.iVideoBuf[i] = (unsigned char *)mmap(0, v4l2_buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, capture.iFd, v4l2_buf.m.offset);
+        capture.iVideoBufLen[i] = v4l2_buf.m.planes[0].length;
+        capture.iVideoBuf[i] = (unsigned char *)mmap(0, v4l2_buf.m.planes[0].length, PROT_READ | PROT_WRITE, MAP_SHARED, capture.iFd, v4l2_buf.m.planes[0].m.mem_offset);
  
         if (MAP_FAILED ==  capture.iVideoBuf[i]){//若映射失败,打印错误
             printf("mmap failed: %d\n",i);
             return -1;
         }else{
-            if (ioctl(capture.iFd, VIDIOC_QBUF, &v4l2_buf) < 0){ // 若映射成功则将内核缓冲区入队
-                printf("VIDIOC_QBUF failed\n");
-                return -1;
+            struct v4l2_exportbuffer expbuf;
+             expbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+             expbuf.index = i;
+             expbuf.flags = O_CLOEXEC;
+             if (ioctl(capture.iFd, VIDIOC_EXPBUF, &expbuf) < 0) {
+                    printf( "get dma buf failed\n");
+            } else {
+                   printf(" get dma buf(%d)-fd: %d\n",i, expbuf.fd);
             }
         }
     }
@@ -178,7 +185,7 @@ void v4l2capture_release_camera()
  */
 int v4l2capture_stream_on()
 {
-    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(capture.iFd, VIDIOC_STREAMON, &type) < 0)
     {
         printf("VIDIOC_STREAMON failed\n");

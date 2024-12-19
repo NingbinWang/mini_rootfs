@@ -4,7 +4,7 @@
 int main()
 {
     int ret = -1;
-    ret = init_v4l2capture("/dev/video7");
+    ret = init_v4l2capture("/dev/video0");
     if(ret < 0){
         printf("init_camera error\n");
         return -1;
